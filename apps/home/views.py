@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from django.urls import reverse
+from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.core.mail import send_mail
 from django.conf import settings
@@ -21,6 +22,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 from .models import GetAQuote
 from .forms import ExtraInfoForm
+from .forms import GetAQuoteForm as AdminGetAQuoteForm
 
 from ..frontend.forms import GetAQuoteForm
 
@@ -115,7 +117,15 @@ def paymentCancel(request):
 def detail_quote(request,id):
     context = {'segment': 'detail-quote'}
     quote = GetAQuote.objects.filter(id=id).first()
+    form = AdminGetAQuoteForm(instance=quote)
+
+    if request.method == "POST":
+        form = AdminGetAQuoteForm(request.POST, instance=quote)
+        if form.is_valid():
+            form.save()
     context['quote'] = quote
+    context['form'] = form
+
     html_template = loader.get_template('staff/detail-quote.html')
     return HttpResponse(html_template.render(context, request))
 
@@ -146,7 +156,8 @@ def extra_info(request,id):
             GetAQuote.objects.filter(email=request.POST['email']).update(price=quotedprice)
             extra_info = f'Please login using below details and provide below info \r Email: {user_obj.email} \r Password: {my_password} \r' + request.POST['request_for_quote']+f'\r\r Dashboard Link: {dashboard_url} \r\r Total Price: {quotedprice}'
         else:
-            getaqoute = GetAQuote.objects.filter(email=request.POST['email']).update(user=request.user)
+            user = User.objects.filter(Q(username=request.POST['email']) | Q(email=request.POST['email'])).first()
+            getaqoute = GetAQuote.objects.filter(email=request.POST['email']).update(user=user)
             quotedprice = request.POST['price']
             GetAQuote.objects.filter(email=request.POST['email']).update(price=quotedprice)
             extra_info = f'Please login to your account and provide below info \r' + \

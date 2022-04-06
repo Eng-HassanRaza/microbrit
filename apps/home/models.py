@@ -9,7 +9,14 @@ from django.contrib.auth.models import User
 # Create your models here.
 
 class GetAQuote(models.Model):
+    ORDER_STATUS_CHOICES = (
+        ('received', 'Order Received'),
+        ('pending', 'Order Pending'),
+        ('shipped', 'Order Shipped'),
+        ('completed', 'Order Completed'),
+    )
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    order_status = models.CharField(max_length=300, null=True, blank=True, choices=ORDER_STATUS_CHOICES)
     request_for_quote = models.TextField(null=True, blank=True)
     upload_design = models.FileField(upload_to='designs/')
     health_safety = models.FileField(upload_to='health_safety/',null=True,blank=True)
@@ -18,6 +25,7 @@ class GetAQuote(models.Model):
     material = models.CharField(max_length=255,null=True,blank=True)
     delivery_date = models.CharField(max_length=255,null=True,blank=True)
     custom_info = models.CharField(max_length=255,null=True,blank=True)
+
     company_details = models.CharField(max_length=255,null=True,blank=True)
     personal_details = models.CharField(max_length=255,null=True,blank=True)
     email = models.CharField(max_length=255,null=True,blank=True)

@@ -17,6 +17,11 @@ urlpatterns = [
     path('customer-provide-extra-info/<int:id>', views.customer_qoute_detail, name='customer_qoute_detail'),
     path('create-quote-staff', views.create_quote_staff, name='create_quote_staff'),
 
+    #Stripe Payment
+    path('create-checkout-session/', views.create_checkout_session, name='create-checkout-session'),
+    path('success/', views.paymentSuccess, name='payment-success'),
+    path('cancelled/', views.paymentCancel, name='payment-cancel'),
+
     # Matches any html file
     re_path(r'^.*\.*', views.pages, name='pages'),
 

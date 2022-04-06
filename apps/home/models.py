@@ -22,6 +22,7 @@ class GetAQuote(models.Model):
     personal_details = models.CharField(max_length=255,null=True,blank=True)
     email = models.CharField(max_length=255,null=True,blank=True)
     created_time = models.DateTimeField(auto_now_add=True)
+    price = models.IntegerField(max_length=65, blank=True, null=True)
 
 
 class ExtraInfo(models.Model):

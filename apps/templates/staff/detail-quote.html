@@ -79,6 +79,10 @@
                                                 <label >Requested Quote</label>
                                                 <textarea class="form-control" rows="3">{{quote.request_for_quote}}</textarea>
                                             </div>
+                                            <div class="form-group">
+                                                <label >Total Price</label>
+                                                <input type="text" class="form-control" value="{{quote.price}}" readonly placeholder="Text">
+                                            </div>
                                              <div class="form-group">
                                                 <label ></label>
                                                 <a href="{% url 'home:extra-info' quote.id %}" class="btn btn-primary">Ask for additional information</a>

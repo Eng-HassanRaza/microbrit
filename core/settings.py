@@ -129,5 +129,9 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'h.r.c.malik@gmail.com'
 EMAIL_HOST_PASSWORD = 'Hassan0331'
+
+#Stripe Credentials
+STRIPE_PUBLISHABLE_KEY = 'pk_test_51KlGY6KvMnEFoFYAzrHRkPtCGpNGIQX4gsG6C4fj6NlBQDOZowFQZtZf4XJY4OgfUSrMK44LPrHh8qU0OCPlsPN8008HlSCqUa'
+STRIPE_SECRET_KEY = 'sk_test_51KlGY6KvMnEFoFYAkYfzphpuwLhwP7WJ6p58Yyqm6rsatDnHJ5xrLH95SW9eCMBuWmFkkI6TcICIfOyEgjRGrm3G00tfIKd6g8'
 #############################################################
 #############################################################

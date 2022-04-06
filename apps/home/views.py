@@ -8,15 +8,22 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from django.urls import reverse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.models import User
+import stripe
+from django.views.generic import View
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+# This is your test secret API key.
+
 
 from .models import GetAQuote
 from .forms import ExtraInfoForm
 
 from ..frontend.forms import GetAQuoteForm
+
 
 def send_email(email,extra_info):
     subject = 'Please provide extra info'
@@ -50,7 +57,57 @@ def customer_qoute_detail(request,id):
     context = {'segment': 'index'}
     quote = GetAQuote.objects.filter(id=id).first()
     context['quote'] = quote
+    context['quote25percent']=quote.price/4
+    context['quote50percent']=quote.price/2
+    context['quote75percent']=(quote.price/4)*3
+    # if request.method == 'POST':
+    #     pay_amount = request.POST['payamount']
+    #     print(pay_amount)
     html_template = loader.get_template('customer/extra-info.html')
+    return HttpResponse(html_template.render(context, request))
+
+@login_required(login_url="/login/")
+def create_checkout_session(request):
+    host = request.get_host()
+    price1 = request.POST['payamount']
+    price = int(float(price1))
+    username = request.user.username
+    checkout_session = stripe.checkout.Session.create(
+
+        line_items=[
+            {
+                'price_data': {
+                    'currency':'USD',
+                    'unit_amount':price*100,
+                    'product_data':{
+                        'name': username
+                    },
+                },
+                'quantity':1,
+            },
+        ],
+        mode='payment',
+        success_url= "http://{}{}".format(host,reverse('home:payment-success')),
+        cancel_url= "http://{}{}".format(host,reverse('home:payment-cancel')),
+    )
+    return redirect(checkout_session.url, code=303)
+
+@login_required(login_url="/login/")
+def paymentSuccess(request):
+
+    context = {
+        'payment_status':'Payment Successfully Proccessed'
+    }
+    html_template = loader.get_template('customer/success.html')
+    return HttpResponse(html_template.render(context, request))
+
+@login_required(login_url="/login/")
+def paymentCancel(request):
+
+    context = {
+        'payment_status': 'cancel'
+    }
+    html_template = loader.get_template('customer/cancel.html')
     return HttpResponse(html_template.render(context, request))
 
 
@@ -85,11 +142,15 @@ def extra_info(request,id):
             user_obj.set_password(my_password)
             user_obj.save()
             getaqoute = GetAQuote.objects.filter(email=request.POST['email']).update(user=user_obj)
-            extra_info = f'Please login using below details and provide below info \r Email: {user_obj.email} \r Password: {my_password} \r' + request.POST['request_for_quote']+f'\r\r Dashboard Link: {dashboard_url}'
+            quotedprice = request.POST['price']
+            GetAQuote.objects.filter(email=request.POST['email']).update(price=quotedprice)
+            extra_info = f'Please login using below details and provide below info \r Email: {user_obj.email} \r Password: {my_password} \r' + request.POST['request_for_quote']+f'\r\r Dashboard Link: {dashboard_url} \r\r Total Price: {quotedprice}'
         else:
-            extra_info = f'Please login to your account and provide below info \r' + \
-                         request.POST['request_for_quote']+f'\r\r Dashboard Link: {dashboard_url}'
             getaqoute = GetAQuote.objects.filter(email=request.POST['email']).update(user=request.user)
+            quotedprice = request.POST['price']
+            GetAQuote.objects.filter(email=request.POST['email']).update(price=quotedprice)
+            extra_info = f'Please login to your account and provide below info \r' + \
+                         request.POST['request_for_quote'] + f'\r\r Dashboard Link: {dashboard_url} \r\r Total Price: {quotedprice}'
 
         send_email(request.POST['email'],extra_info)
 
